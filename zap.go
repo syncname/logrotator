@@ -1,4 +1,4 @@
-package main
+package logrotator
 
 import (
 	"fmt"
@@ -9,6 +9,13 @@ import (
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+)
+
+const (
+	DailyStrategy   = "daily"
+	WeeklyStrategy  = "weekly"
+	MonthlyStrategy = "monthly"
+	YearlyStrategy  = "yearly"
 )
 
 type LogRotator struct {
@@ -53,6 +60,7 @@ func (r *LogRotator) Write(data []byte) (int, error) {
 	}
 
 	//size log rotation
+
 	if r.currentFileSize+int64(len(data)) > r.maxSize {
 		if err := r.rotate(); err != nil {
 			return 0, err
@@ -80,7 +88,6 @@ func (r *LogRotator) rotate() error {
 	if err := os.MkdirAll(folder, 0755); err != nil {
 		return fmt.Errorf("mkdir error: %w", err)
 	}
-
 	filename := filepath.Join(folder, fmt.Sprintf("log_%d.log", time.Now().Unix()))
 	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
@@ -98,14 +105,14 @@ func (r *LogRotator) rotate() error {
 func (r *LogRotator) getRotationFolder() string {
 	now := time.Now()
 	switch r.rotationStrategy {
-	case "daily":
+	case DailyStrategy:
 		return filepath.Join(r.basePath, now.Format("2006-01-02"))
-	case "weekly":
+	case WeeklyStrategy:
 		year, week := now.ISOWeek()
 		return filepath.Join(r.basePath, fmt.Sprintf("%d-W%02d", year, week))
-	case "monthly":
+	case MonthlyStrategy:
 		return filepath.Join(r.basePath, now.Format("2006-01"))
-	case "yearly":
+	case YearlyStrategy:
 		return filepath.Join(r.basePath, now.Format("2006"))
 	default:
 		return r.basePath
@@ -165,23 +172,4 @@ func (z *ZapCoreAdapter) Write(entry zapcore.Entry, fields []zapcore.Field) erro
 // Sync выполняет синхронизацию (для совместимости с zapcore.Core)
 func (z *ZapCoreAdapter) Sync() error {
 	return nil
-}
-
-func main() {
-	// Создаем ротатор
-	rotator, err := NewLogRotator("./logs", time.Minute, 1024*1024, "daily") // Интервал: 1 минута, Размер: 1 МБ
-	if err != nil {
-		fmt.Printf("Ошибка создания ротатора: %v\n", err)
-		return
-	}
-
-	// Создаем zap.Logger с кастомным core
-	core := NewZapCore(rotator, zapcore.InfoLevel)
-	logger := zap.New(core)
-
-	// Логируем примеры
-	for i := 0; i < 1000; i++ {
-		logger.Info("Пример сообщения", zap.Int("номер", i))
-		time.Sleep(500 * time.Millisecond)
-	}
 }
