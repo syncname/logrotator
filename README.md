@@ -93,7 +93,6 @@ package main
 import (
     "log"
     "time"
-
     "github.com/rs/zerolog"
     "github.com/syncname/logrotator"
 )
@@ -140,12 +139,11 @@ package main
 import (
 	"log"
 	"time"
-
 	"github.com/sirupsen/logrus"
 	"github.com/syncname/logrotator"
 )
 
-func main(){
+func main() {
 	// Настройка LogRotator
 	basePath := "./logs_logrus" // Путь к папке для логов
 	interval := 24 * time.Hour
@@ -158,9 +156,8 @@ func main(){
 	}
 
 	// Создаем кастомный Writer
-	writer := &logrotator.LogrusWriter{rotator: rotator}
-
-	// Настройка logrus
+	writer := &logrotator.LogrusWriter{}
+	writer.SetRotator(rotator)
 	logrus.SetOutput(writer)                     // Устанавливаем наш кастомный Writer
 	logrus.SetFormatter(&logrus.JSONFormatter{}) // Используем JSON формат для логов
 	logrus.SetLevel(logrus.DebugLevel)           // Устанавливаем уровень логирования
@@ -177,6 +174,7 @@ func main(){
 		}
 	}()
 }
+
 ```
 
 ### Zap
@@ -187,9 +185,7 @@ package main
 
 import (
     "log"
-    "os"
     "time"
-
     "go.uber.org/zap"
     "go.uber.org/zap/zapcore"
     "github.com/syncname/logrotator"
@@ -263,14 +259,10 @@ To use with Go's standard logs, simply pass LogRotator as an io.Writer.
 package main
 
 import (
-	"io"
-	"log"
-	"os"
-	"time"
-
 	"github.com/syncname/logrotator"
+	"log"
+	"time"
 )
-
 
 func main() {
 	basePath := "./logs"
@@ -284,12 +276,14 @@ func main() {
 	}
 
 	writer := &logrotator.StdWriter{}
+	writer.SetRotator(rotator)
 	log.SetOutput(writer)
 
 	log.Println("This is a standard log message")
 
 	defer rotator.CurrentFile().Close()
 }
+
 ```
 
 
