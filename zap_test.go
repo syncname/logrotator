@@ -28,7 +28,7 @@ func TestNewLogRotator(t *testing.T) {
 	}
 
 	// Создаем zap.Logger с кастомным core
-	core := NewZapCore(rotator, zapcore.InfoLevel)
+	core := NewZapCore(rotator, zapcore.InfoLevel, nil)
 	//logger := zap.New(core)
 
 	consoleEncoder := getConsoleEncoder()
@@ -58,7 +58,7 @@ func TestLogRotatorZap(t *testing.T) {
 		log.Fatalf("Failed to create log rotator: %v", err)
 	}
 
-	zapCore := NewZapCore(rotator, zapcore.InfoLevel)
+	zapCore := NewZapCore(rotator, zapcore.InfoLevel, nil)
 	logger := zap.New(zapCore, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
 
 	logger.Info("This is an info message")

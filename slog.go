@@ -4,7 +4,6 @@ type SlogWriter struct {
 	rotator *LogRotator
 }
 
-// Write реализует интерфейс io.Writer для CustomWriter
 func (cw *SlogWriter) Write(data []byte) (int, error) {
 	return cw.rotator.Write(data)
 }

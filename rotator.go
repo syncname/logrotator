@@ -26,7 +26,6 @@ type LogRotator struct {
 	lastRotationTime time.Time
 }
 
-// NewLogRotator создает новый экземпляр LogRotator
 func NewLogRotator(basePath string, interval time.Duration, maxSize int64, strategy string) (*LogRotator, error) {
 	rotator := &LogRotator{
 		basePath:         basePath,
