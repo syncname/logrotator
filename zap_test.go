@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"log"
 	"os"
 	"testing"
 	"time"
@@ -20,7 +21,7 @@ func getConsoleEncoder() zapcore.Encoder {
 
 func TestNewLogRotator(t *testing.T) {
 	// Создаем ротатор
-	rotator, err := NewLogRotator("./logs", time.Minute, 1024, "daily") // Интервал: 1 минута, Размер: 1 МБ
+	rotator, err := NewLogRotator("./logs", time.Minute, 1024, DailyStrategy) // Интервал: 1 минута, Размер: 1 МБ
 	if err != nil {
 		fmt.Printf("Ошибка создания ротатора: %v\n", err)
 		return
@@ -44,4 +45,25 @@ func TestNewLogRotator(t *testing.T) {
 		logger.Info("Пример сообщения", zap.Int("номер", i))
 		time.Sleep(150 * time.Millisecond)
 	}
+}
+
+func TestLogRotatorZap(t *testing.T) {
+	basePath := "./logs"
+	interval := 24 * time.Hour
+	maxSize := int64(10 << 20)
+	strategy := DailyStrategy
+
+	rotator, err := NewLogRotator(basePath, interval, maxSize, strategy)
+	if err != nil {
+		log.Fatalf("Failed to create log rotator: %v", err)
+	}
+
+	zapCore := NewZapCore(rotator, zapcore.InfoLevel)
+	logger := zap.New(zapCore, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
+
+	logger.Info("This is an info message")
+	logger.Warn("This is a warning message")
+	logger.Error("This is an error message")
+
+	defer rotator.CurrentFile().Close()
 }
